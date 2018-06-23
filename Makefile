@@ -9,6 +9,6 @@ flake8:
 pylint:
 	pylint --rcfile .pylintrc github_labels_sync
 
-push:
+push: check
 	git push && git push --tags
 
