@@ -1,3 +1,27 @@
 #!/bin/sh
+set -eu
+
+_python3=
+_minor=$(python3 -V | cut -d ' ' -f 2 | cut -d '.' -f '2')
+if [ ${_minor} -lt 6 ]
+then
+    for i in 9 8 7 6
+    do
+        if which "python3.$i" > /dev/null 2>&1
+        then
+            _python3="python3.$i"
+            break
+        fi
+    done
+else
+    _python3=python3
+fi
+
+if [ -z "$_python3" ]
+then
+    echo "Python >= 3.6 not found." >&2
+    exit 1
+fi
+
 export PYTHONPATH=.
-exec python3 -m github_labels_sync "$@"
+exec ${_python3} -m github_labels_sync "$@"
