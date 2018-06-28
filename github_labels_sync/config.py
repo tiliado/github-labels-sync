@@ -40,13 +40,14 @@ class Config:
             self.secondary_repos = []
 
     def export(self) -> dict:
+        self.secondary_repos.sort()
         return {
             '#mandatory': 'Labels that must be in each repository.',
-            'mandatory': self.labels.mandatory,
+            'mandatory': utils.sorted_dict(self.labels.mandatory),
             '#optional': 'Labels that may be in a repository.',
-            'optional': self.labels.optional,
+            'optional': utils.sorted_dict(self.labels.optional),
             '#aliases': 'Labels that must be renamed.',
-            'aliases': self.labels.aliases,
+            'aliases': utils.sorted_dict(self.labels.aliases),
             'repos': {
                 '#primary': 'The repository to pull labels from.',
                 'primary': self.primary_repo,
