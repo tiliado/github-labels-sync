@@ -1,7 +1,7 @@
 # Copyright 2018 Jiří Janoušek <janousek.jiri@gmail.com>
 # Licensed under BSD-2-Clause license - see file LICENSE for details.
 
-from typing import Union, Dict
+from typing import Union, Dict, Any
 
 
 def get_str_dict(data: dict, key: str) -> Union[Dict[str, str], None]:
@@ -35,3 +35,7 @@ def get_str_dict_of_str_dicts(data: dict, key: str) -> Union[Dict[str, Dict[str,
             if not isinstance(value3, str):
                 raise TypeError(f'{key}.{key2}.{key3}: Value must be str, not {type(value3)!s} {value3!r}.')
     return item
+
+
+def sorted_dict(dictionary: Dict[str, Any]) -> Dict[str, Any]:
+    return {key: dictionary[key] for key in sorted(dictionary)}
