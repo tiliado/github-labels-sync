@@ -7,7 +7,7 @@ import os
 
 from github_labels_sync import io
 from github_labels_sync.config import Config
-from github_labels_sync.github import Client
+from github_labels_sync.github import GitHub
 
 
 def main(argv: List[str]) -> Optional[int]:
@@ -43,12 +43,12 @@ def main(argv: List[str]) -> Optional[int]:
 
     token = load_token(params)
 
-    client = Client()
-    client.set_token(token)
+    github = GitHub()
+    github.set_token(token)
     if params.pull:
-        return pull(client, config)
+        return pull(github, config)
     if params.push:
-        return push(client, config)
+        return push(github, config)
     raise Exception('Unknown action')
 
 
@@ -90,13 +90,13 @@ def init(config: Config) -> int:
     return 0
 
 
-def pull(client: Client, config: Config) -> int:
-    labels = client.list_labels(config.primary_repo)
+def pull(github: GitHub, config: Config) -> int:
+    labels = github.list_labels(config.primary_repo)
     config.labels.update(labels)
     config.save(force=True)
     return 0
 
 
-def push(client: Client, config: Config) -> int:
-    print("Push not implemented yet.", client, config)
+def push(github: GitHub, config: Config) -> int:
+    print("Push not implemented yet.", github, config)
     return 1
