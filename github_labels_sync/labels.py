@@ -30,7 +30,9 @@ class ReplaceAction(Action):
         self.replacement = replacement
 
     def run(self, github: GitHub, repo: str) -> None:
-        raise NotImplementedError(repr(self))
+        old_label = self.label["name"]
+        github.replace_label(repo, old_label, self.replacement["name"])
+        github.delete_label(repo, old_label)
 
     def __repr__(self) -> str:
         return f'Replace: {self.label["name"]!r} → {self.replacement["name"]!r}'

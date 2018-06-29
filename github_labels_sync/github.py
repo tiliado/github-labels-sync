@@ -56,6 +56,14 @@ class GitHub:
     def update_label(self, repo: str, name: str, properties: dict) -> dict:
         return self.rest_client.patch(f'/repos/{repo}/labels/{name}', properties)
 
+    def delete_label(self, repo: str, name: str) -> None:
+        self.rest_client.delete(f'/repos/{repo}/labels/{name}')
+
+    def replace_label(self, repo: str, old_label: str, new_label: str) -> None:
+        issues = self.list_issues_with_label(repo, old_label)
+        if issues:
+            raise NotImplementedError([old_label, new_label, issues])
+
     def list_labels(self, repo: str) -> List[Dict[str, str]]:
         owner, repo = repo.split('/')
         data = self.graphql_client.query(
@@ -74,4 +82,21 @@ class GitHub:
             }
             ''', owner=owner, repo=repo)
         result: List[Dict[str, str]] = data['repository']['labels']['nodes']
+        return result
+
+    def list_issues_with_label(self, repo: str, label: str) -> List[Dict[str, str]]:
+        owner, repo = repo.split('/')
+        data = self.graphql_client.query(
+            '''
+            query ($owner: String!, $repo: String!, $label: String!) {
+              repository(owner: $owner, name: $repo) {
+                issues(labels: [$label], first: 100) {
+                  nodes {
+                    number
+                  }
+                }
+              }
+            }
+            ''', owner=owner, repo=repo, label=label)
+        result: List[Dict[str, str]] = data['repository']['issues']['nodes']
         return result

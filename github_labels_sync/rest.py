@@ -25,4 +25,7 @@ class Client(http.Client):
         assert isinstance(data, dict)
         return data
 
+    def delete(self, method: str) -> None:
+        self.session.delete(f'{self.endpoint}{method}', headers=self.headers)
+
     __call__ = call
