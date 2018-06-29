@@ -8,6 +8,9 @@ import os
 from github_labels_sync import io
 from github_labels_sync.config import Config
 from github_labels_sync.github import GitHub
+from github_labels_sync.init_command import init
+from github_labels_sync.pull_command import pull
+from github_labels_sync.push_command import push
 
 
 def main(argv: List[str]) -> Optional[int]:
@@ -83,23 +86,3 @@ def load_token(params: argparse.Namespace) -> str:
     if not token:
         raise ValueError('You need OAuth2 token.')
     return token
-
-
-def init(config: Config) -> int:
-    config.save(force=True)
-    return 0
-
-
-def pull(github: GitHub, config: Config) -> int:
-    owner, repo = config.primary_repo.split('/')
-    labels = github.list_labels(config.primary_repo)
-    config.labels.update(labels)
-    config.save(force=True)
-    for label in labels:
-        print(github.get_label(owner, repo, label['name']))
-    return 0
-
-
-def push(github: GitHub, config: Config) -> int:
-    print("Push not implemented yet.", github, config)
-    return 1
