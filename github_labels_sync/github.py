@@ -1,7 +1,7 @@
 # Copyright 2018 Jiří Janoušek <janousek.jiri@gmail.com>
 # Licensed under BSD-2-Clause license - see file LICENSE for details.
 
-from typing import List, Dict, Optional, Union, Iterable
+from typing import List, Dict, Optional, Union, Iterable, Any
 
 import requests
 
@@ -51,14 +51,20 @@ class GitHub:
         self.rest_client.unset_token()
 
     def get_label(self, owner: str, repo: str, name: str) -> dict:
-        return self.rest_client(f'/repos/{owner}/{repo}/labels/{name}')
+        result = self.rest_client(f'/repos/{owner}/{repo}/labels/{name}')
+        assert isinstance(result, dict)
+        return result
 
     def create_label(self, repo: str, name: str, properties: dict) -> dict:
         properties['name'] = name
-        return self.rest_client.post(f'/repos/{repo}/labels', properties)
+        result = self.rest_client.post(f'/repos/{repo}/labels', properties)
+        assert isinstance(result, dict)
+        return result
 
     def update_label(self, repo: str, name: str, properties: dict) -> dict:
-        return self.rest_client.patch(f'/repos/{repo}/labels/{name}', properties)
+        result = self.rest_client.patch(f'/repos/{repo}/labels/{name}', properties)
+        assert isinstance(result, dict)
+        return result
 
     def delete_label(self, repo: str, name: str) -> None:
         self.rest_client.delete(f'/repos/{repo}/labels/{name}')
@@ -73,14 +79,16 @@ class GitHub:
                 self.add_label_to_issue(repo, number, new_label)
                 self.remove_label_from_issue(repo, number, old_label)
 
-    def add_label_to_issue(self, repo: str, issue: int, label: str):
+    def add_label_to_issue(self, repo: str, issue: int, label: str) -> List[str]:
         return self.add_labels_to_issue(repo, issue, [label])
 
-    def add_labels_to_issue(self, repo: str, issue: int, labels: Iterable[str]):
-        return self.rest_client.post(f'/repos/{repo}/issues/{issue}/labels', list(labels))
+    def add_labels_to_issue(self, repo: str, issue: int, labels: Iterable[str]) -> List[str]:
+        result = self.rest_client.post(f'/repos/{repo}/issues/{issue}/labels', list(labels))
+        assert isinstance(result, list)
+        return result
 
-    def remove_label_from_issue(self, repo: str, issue: int, label: str):
-        return self.rest_client.delete(f'/repos/{repo}/issues/{issue}/labels/{label}')
+    def remove_label_from_issue(self, repo: str, issue: int, label: str) -> None:
+        self.rest_client.delete(f'/repos/{repo}/issues/{issue}/labels/{label}')
 
     def list_labels(self, repo: str) -> List[Dict[str, str]]:
         owner, repo = repo.split('/')
@@ -102,7 +110,7 @@ class GitHub:
         result: List[Dict[str, str]] = data['repository']['labels']['nodes']
         return result
 
-    def list_issues_with_label(self, repo: str, label: str) -> List[Dict[str, str]]:
+    def list_issues_with_label(self, repo: str, label: str) -> List[Dict[str, Any]]:
         owner, repo = repo.split('/')
         data = self.graphql_client.query(
             '''

@@ -1,6 +1,7 @@
 # Copyright 2018 Jiří Janoušek <janousek.jiri@gmail.com>
 # Licensed under BSD-2-Clause license - see file LICENSE for details.
 
+import json
 from typing import Union
 
 from github_labels_sync import http
@@ -20,13 +21,13 @@ class Client(http.Client):
         return data
 
     def post(self, method: str, data: Union[dict, list]) -> Union[dict, list]:
-        response = self.session.post(f'{self.endpoint}{method}', headers=self.headers, json=data)
+        response = self.session.post(f'{self.endpoint}{method}', headers=self.headers, data=json.dumps(data).encode())
         data = response.json()
         assert isinstance(data, (dict, list))
         return data
 
     def patch(self, method: str, data: Union[dict, list]) -> Union[dict, list]:
-        response = self.session.patch(f'{self.endpoint}{method}', headers=self.headers, json=data)
+        response = self.session.patch(f'{self.endpoint}{method}', headers=self.headers, data=json.dumps(data).encode())
         data = response.json()
         assert isinstance(data, (dict, list))
         return data
