@@ -23,7 +23,7 @@ class RestClient(rest.Client):
                  endpoint: str = DEFAULT_REST_ENDPOINT_URL,
                  session: Optional[requests.Session] = None) -> None:
         super().__init__(endpoint, session)
-        self.headers['Accept'] = 'application/vnd.github.v3+json'
+        self.headers['Accept'] = 'application/vnd.github.symmetra-preview+json'
 
 
 class GitHub:
@@ -52,6 +52,9 @@ class GitHub:
 
     def get_label(self, owner: str, repo: str, name: str) -> dict:
         return self.rest_client(f'/repos/{owner}/{repo}/labels/{name}')
+
+    def update_label(self, repo: str, name: str, properties: dict) -> dict:
+        return self.rest_client.patch(f'/repos/{repo}/labels/{name}', properties)
 
     def list_labels(self, repo: str) -> List[Dict[str, str]]:
         owner, repo = repo.split('/')

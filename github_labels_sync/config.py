@@ -15,6 +15,7 @@ class Config:
     labels: Labels
     primary_repo: str
     secondary_repos: List[str]
+    all_repos: List[str]
 
     def __init__(self, path: str, *, primary_repo: Optional[str] = None, allow_empty: Optional[bool] = False) -> None:
         self.path = path
@@ -38,6 +39,7 @@ class Config:
             self.secondary_repos = data['repos']['secondary'] or []
         except KeyError:
             self.secondary_repos = []
+        self.all_repos = [self.primary_repo] + self.secondary_repos
 
     def export(self) -> dict:
         self.secondary_repos.sort()

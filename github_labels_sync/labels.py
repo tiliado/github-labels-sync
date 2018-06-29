@@ -1,31 +1,66 @@
 # Copyright 2018 Jiří Janoušek <janousek.jiri@gmail.com>
 # Licensed under BSD-2-Clause license - see file LICENSE for details.
 
-from typing import List, Union, Optional
+from typing import List, Optional, Iterable
 
+from github_labels_sync.github import GitHub
 from github_labels_sync.typing import StrDict, DictOfStrDicts
 
 
-class UpdateAction:
+class Action:
+    def run(self, github: GitHub, repo: str) -> None:
+        raise NotImplementedError
+
+
+class UpdateAction(Action):
     def __init__(self, label: StrDict, updates: StrDict) -> None:
         self.updates = updates
         self.label = label
 
+    def run(self, github: GitHub, repo: str) -> None:
+        github.update_label(repo, self.label["name"], self.updates)
 
-class ReplaceAction:
+    def __repr__(self) -> str:
+        return f'Update: {self.label["name"]!r}'
+
+
+class ReplaceAction(Action):
     def __init__(self, label: StrDict, replacement: StrDict) -> None:
         self.label = label
         self.replacement = replacement
 
+    def run(self, github: GitHub, repo: str) -> None:
+        raise NotImplementedError(repr(self))
 
-class RenameAction:
-    def __init__(self, label: StrDict, new_name: str) -> None:
-        self.new_name = new_name
+    def __repr__(self) -> str:
+        return f'Replace: {self.label["name"]!r} → {self.replacement["name"]!r}'
+
+
+class RenameAction(UpdateAction):
+    def __repr__(self) -> str:
+        return f'Rename: {self.label["name"]!r} → {self.updates["name"]!r}'
+
+
+class UnknownLabelAction(Action):
+    def __init__(self, label: StrDict) -> None:
         self.label = label
 
+    def run(self, github: GitHub, repo: str) -> None:
+        raise NotImplementedError(f'No idea what to do with {self.label["name"]!r} in {repo}')
 
-Action = Union[UpdateAction, ReplaceAction, RenameAction]  # pylint: disable=invalid-name
+    def __repr__(self) -> str:
+        return f'Unknown: {self.label["name"]!r}'
+
+
 PROPERTIES = 'color', 'description'
+
+
+def find_changes(original: StrDict, changed: StrDict, properties: Iterable[str]) -> StrDict:
+    changes: StrDict = {}
+    for prop in properties:
+        if original[prop] != changed[prop]:
+            changes[prop] = changed[prop]
+    return changes
 
 
 class Labels:
@@ -42,6 +77,9 @@ class Labels:
         self.optional: DictOfStrDicts = optional or {}
         self.aliases: StrDict = aliases or {}
         self.modified: bool = False
+
+    def get_label(self, name: str) -> Optional[StrDict]:
+        return self.mandatory.get(name, self.optional.get(name))
 
     def update(self, labels: List[StrDict]) -> None:
         for label in labels:
@@ -70,19 +108,21 @@ class Labels:
                 if alias in labels_map:
                     actions.append(ReplaceAction(label, labels_map[alias]))
                 else:
-                    actions.append(RenameAction(label, alias))
-                    labels_map[alias] = label
+                    alias_label = self.get_label(alias)
+                    assert alias_label
+                    changes = find_changes(label, alias_label, PROPERTIES)
+                    changes['name'] = alias
+                    actions.append(RenameAction(label, changes))
+                    labels_map[alias] = alias_label
                 del labels_map[name]
-            elif name not in self.mandatory or name not in self.optional:
-                raise ValueError('Unknown label "%s" - not in mandatory nor optional nor aliases.' % name)
+            elif name not in self.mandatory and name not in self.optional:
+                actions.append(UnknownLabelAction(label))
 
         for name, label in labels_map.items():
-            item = self.optional.get(name, self.mandatory.get(name))
-            assert item
-            updates = {}
-            for prop in PROPERTIES:
-                if item[prop] != label[prop]:
-                    updates[prop] = item[prop]
+            item = self.get_label(name)
+            if not item:
+                continue
+            updates = find_changes(label, item, PROPERTIES)
             if updates:
                 actions.append(UpdateAction(label, updates))
         return actions
