@@ -5,10 +5,10 @@ from typing import List, Dict, Optional, Union
 
 import requests
 
-from github_labels_sync import graphql
-
+from github_labels_sync import graphql, rest
 
 DEFAULT_GRAPHQL_ENDPOINT_URL = 'https://api.github.com/graphql'
+DEFAULT_REST_ENDPOINT_URL = 'https://api.github.com'
 
 
 class GraphqlClient(graphql.Client):
@@ -18,20 +18,40 @@ class GraphqlClient(graphql.Client):
         super().__init__(endpoint, session)
 
 
+class RestClient(rest.Client):
+    def __init__(self,
+                 endpoint: str = DEFAULT_REST_ENDPOINT_URL,
+                 session: Optional[requests.Session] = None) -> None:
+        super().__init__(endpoint, session)
+        self.headers['Accept'] = 'application/vnd.github.v3+json'
+
+
 class GitHub:
     graphql_client: graphql.Client
+    rest_client: rest.Client
 
-    def __init__(self, graphql_client: Optional[graphql.Client] = None) -> None:
-        if not graphql_client:
+    def __init__(self,
+                 graphql_client: Optional[graphql.Client] = None,
+                 rest_client: Optional[rest.Client] = None) -> None:
+        if not graphql_client or not rest_client:
             session = requests.Session()
-            graphql_client = GraphqlClient(session=session)
+            if not graphql_client:
+                graphql_client = GraphqlClient(session=session)
+            if not rest_client:
+                rest_client = RestClient(session=session)
         self.graphql_client = graphql_client
+        self.rest_client = rest_client
 
     def set_token(self, token: Union[bytes, str]) -> None:
         self.graphql_client.set_token(token)
+        self.rest_client.set_token(token)
 
     def unset_token(self) -> None:
         self.graphql_client.unset_token()
+        self.rest_client.unset_token()
+
+    def get_label(self, owner: str, repo: str, name: str) -> dict:
+        return self.rest_client(f'/repos/{owner}/{repo}/labels/{name}')
 
     def list_labels(self, repo: str) -> List[Dict[str, str]]:
         owner, repo = repo.split('/')

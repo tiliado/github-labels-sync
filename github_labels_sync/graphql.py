@@ -3,23 +3,10 @@
 
 from typing import Union, Any, Optional
 
-import requests
-
-from github_labels_sync.typing import StrDict
+from github_labels_sync import http
 
 
-class Client:
-    endpoint: str
-    session: requests.Session
-    headers: StrDict
-
-    def __init__(self, endpoint: str, session: Optional[requests.Session] = None) -> None:
-        self.endpoint = endpoint
-        if not session:
-            session = requests.Session()
-        self.headers = {'Accept': 'application/json'}
-        self.session = session
-
+class Client(http.Client):
     def query(self, query: str, variables: Optional[dict] = None, **kwargs: Any) -> dict:
         if variables is None:
             variables = kwargs

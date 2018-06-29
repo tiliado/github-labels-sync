@@ -91,9 +91,12 @@ def init(config: Config) -> int:
 
 
 def pull(github: GitHub, config: Config) -> int:
+    owner, repo = config.primary_repo.split('/')
     labels = github.list_labels(config.primary_repo)
     config.labels.update(labels)
     config.save(force=True)
+    for label in labels:
+        print(github.get_label(owner, repo, label['name']))
     return 0
 
 
