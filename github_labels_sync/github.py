@@ -53,6 +53,10 @@ class GitHub:
     def get_label(self, owner: str, repo: str, name: str) -> dict:
         return self.rest_client(f'/repos/{owner}/{repo}/labels/{name}')
 
+    def create_label(self, repo: str, name: str, properties: dict) -> dict:
+        properties['name'] = name
+        return self.rest_client.post(f'/repos/{repo}/labels', properties)
+
     def update_label(self, repo: str, name: str, properties: dict) -> dict:
         return self.rest_client.patch(f'/repos/{repo}/labels/{name}', properties)
 

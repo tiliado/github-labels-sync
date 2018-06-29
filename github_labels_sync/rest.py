@@ -19,6 +19,12 @@ class Client(http.Client):
         assert isinstance(data, dict)
         return data
 
+    def post(self, method: str, data: dict) -> dict:
+        response = self.session.post(f'{self.endpoint}{method}', headers=self.headers, json=data)
+        data = response.json()
+        assert isinstance(data, dict)
+        return data
+
     def patch(self, method: str, data: dict) -> dict:
         response = self.session.patch(f'{self.endpoint}{method}', headers=self.headers, json=data)
         data = response.json()

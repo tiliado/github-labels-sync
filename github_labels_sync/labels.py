@@ -3,7 +3,8 @@
 
 from typing import List, Optional, Iterable
 
-from github_labels_sync.actions import Action, UpdateAction, ReplaceAction, RenameAction, UnknownLabelAction
+from github_labels_sync.actions import Action, UpdateAction, ReplaceAction, RenameAction, UnknownLabelAction, \
+    CreateAction
 from github_labels_sync.typing import StrDict, DictOfStrDicts
 
 PROPERTIES = 'color', 'description'
@@ -22,6 +23,7 @@ class Labels:
     optional: DictOfStrDicts
     aliases: StrDict
     modified: bool
+    all_labels: DictOfStrDicts
 
     def __init__(self,
                  mandatory: Optional[DictOfStrDicts] = None,
@@ -31,9 +33,12 @@ class Labels:
         self.optional: DictOfStrDicts = optional or {}
         self.aliases: StrDict = aliases or {}
         self.modified: bool = False
+        self.all_labels = {}
+        self.all_labels.update(self.optional)
+        self.all_labels.update(self.mandatory)
 
     def get_label(self, name: str) -> Optional[StrDict]:
-        return self.mandatory.get(name, self.optional.get(name))
+        return self.all_labels.get(name)
 
     def update(self, labels: List[StrDict]) -> None:
         for label in labels:
@@ -50,6 +55,7 @@ class Labels:
                     self.modified = True
 
     def process(self, labels: List[StrDict]) -> List[Action]:
+        mandatory = self.mandatory.copy()
         actions: List[Action] = []
         labels_map: DictOfStrDicts = {}
         for label in labels:
@@ -69,14 +75,20 @@ class Labels:
                     actions.append(RenameAction(label, changes))
                     labels_map[alias] = alias_label
                 del labels_map[name]
-            elif name not in self.mandatory and name not in self.optional:
+            elif name not in self.all_labels:
                 actions.append(UnknownLabelAction(label))
+                del labels_map[name]
 
         for name, label in labels_map.items():
-            item = self.get_label(name)
-            if not item:
-                continue
+            item = self.all_labels[name]  # Should not raise KeyError
             updates = find_changes(label, item, PROPERTIES)
             if updates:
                 actions.append(UpdateAction(label, updates))
+            try:
+                del mandatory[name]
+            except KeyError:
+                assert name in self.optional
+
+        for name, label in mandatory.items():
+            actions.append(CreateAction(name, label))
         return actions

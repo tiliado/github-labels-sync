@@ -50,3 +50,15 @@ class UnknownLabelAction(Action):
 
     def __repr__(self) -> str:
         return f'Unknown: {self.label["name"]!r}'
+
+
+class CreateAction(Action):
+    def __init__(self, name: str, properties: StrDict, ) -> None:
+        self.name = name
+        self.properties = properties
+
+    def run(self, github: GitHub, repo: str) -> None:
+        github.create_label(repo, self.name, self.properties)
+
+    def __repr__(self) -> str:
+        return f'Create: {self.name!r}'
