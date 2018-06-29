@@ -13,22 +13,22 @@ class Client(http.Client):
     def unset_token(self) -> None:
         del self.headers['Authorization']
 
-    def call(self, method: str) -> dict:
+    def call(self, method: str) -> Union[dict, list]:
         response = self.session.get(f'{self.endpoint}{method}', headers=self.headers)
         data = response.json()
-        assert isinstance(data, dict)
+        assert isinstance(data, (dict, list))
         return data
 
-    def post(self, method: str, data: dict) -> dict:
+    def post(self, method: str, data: Union[dict, list]) -> Union[dict, list]:
         response = self.session.post(f'{self.endpoint}{method}', headers=self.headers, json=data)
         data = response.json()
-        assert isinstance(data, dict)
+        assert isinstance(data, (dict, list))
         return data
 
-    def patch(self, method: str, data: dict) -> dict:
+    def patch(self, method: str, data: Union[dict, list]) -> Union[dict, list]:
         response = self.session.patch(f'{self.endpoint}{method}', headers=self.headers, json=data)
         data = response.json()
-        assert isinstance(data, dict)
+        assert isinstance(data, (dict, list))
         return data
 
     def delete(self, method: str) -> None:
