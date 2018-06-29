@@ -3,7 +3,7 @@
 
 from github_labels_sync.config import Config
 from github_labels_sync.github import GitHub
-from github_labels_sync.labels import UnknownLabelAction
+from github_labels_sync.actions import UnknownLabelAction
 
 
 def push(github: GitHub, config: Config) -> int:
