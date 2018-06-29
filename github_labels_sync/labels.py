@@ -36,6 +36,9 @@ class Labels:
         self.all_labels = {}
         self.all_labels.update(self.optional)
         self.all_labels.update(self.mandatory)
+        for label, alias in self.aliases.items():
+            if alias not in self.all_labels:
+                raise ValueError(f'Cannot find label {alias!r} specified as an alias for {label!r}.')
 
     def get_label(self, name: str) -> Optional[StrDict]:
         return self.all_labels.get(name)
