@@ -70,8 +70,9 @@ class Labels:
                 else:
                     alias_label = self.get_label(alias)
                     assert alias_label
+                    alias_label.copy()
                     changes = find_changes(label, alias_label, PROPERTIES)
-                    changes['name'] = alias
+                    changes['name'] = alias_label['name'] = alias
                     actions.append(RenameAction(label, changes))
                     labels_map[alias] = alias_label
                 del labels_map[name]
