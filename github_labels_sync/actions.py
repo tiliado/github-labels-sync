@@ -26,6 +26,7 @@ class ReplaceAction(Action):
     def __init__(self, label: StrDict, replacement: StrDict) -> None:
         self.label = label
         self.replacement = replacement
+        assert 'name' in replacement, replacement
 
     def run(self, github: GitHub, repo: str) -> None:
         old_label = self.label["name"]
@@ -37,6 +38,10 @@ class ReplaceAction(Action):
 
 
 class RenameAction(UpdateAction):
+    def __init__(self, label: StrDict, updates: StrDict) -> None:
+        super().__init__(label, updates)
+        assert 'name' in updates, updates
+
     def __repr__(self) -> str:
         return f'Rename: {self.label["name"]!r} → {self.updates["name"]!r}'
 
