@@ -1,7 +1,7 @@
 # Copyright 2018 Jiří Janoušek <janousek.jiri@gmail.com>
 # Licensed under BSD-2-Clause license - see file LICENSE for details.
 
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Iterable
 
 import requests
 
@@ -64,9 +64,23 @@ class GitHub:
         self.rest_client.delete(f'/repos/{repo}/labels/{name}')
 
     def replace_label(self, repo: str, old_label: str, new_label: str) -> None:
-        issues = self.list_issues_with_label(repo, old_label)
-        if issues:
-            raise NotImplementedError([old_label, new_label, issues])
+        while True:
+            issues = self.list_issues_with_label(repo, old_label)
+            if not issues:
+                break
+            for issue in issues:
+                number: int = issue['number']
+                self.add_label_to_issue(repo, number, new_label)
+                self.remove_label_from_issue(repo, number, old_label)
+
+    def add_label_to_issue(self, repo: str, issue: int, label: str):
+        return self.add_labels_to_issue(repo, issue, [label])
+
+    def add_labels_to_issue(self, repo: str, issue: int, labels: Iterable[str]):
+        return self.rest_client.post(f'/repos/{repo}/issues/{issue}/labels', list(labels))
+
+    def remove_label_from_issue(self, repo: str, issue: int, label: str):
+        return self.rest_client.delete(f'/repos/{repo}/issues/{issue}/labels/{label}')
 
     def list_labels(self, repo: str) -> List[Dict[str, str]]:
         owner, repo = repo.split('/')
